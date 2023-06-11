@@ -1,5 +1,6 @@
 import fastify from "fastify";
 import cors from "@fastify/cors";
+import * as process from "process";
 
 export type Food = {
   name: string;
@@ -68,4 +69,4 @@ server.get("/foods", (request, reply) => {
 });
 
 // start the server
-server.listen({ port: 3333, host: "0.0.0.0" });
+server.listen({ port: Number(process.env.PORT ?? 3000), host: "0.0.0.0" });
