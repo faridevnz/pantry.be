@@ -68,4 +68,4 @@ server.get("/foods", (request, reply) => {
 });
 
 // start the server
-server.listen({ port: 3333 });
+server.listen({ port: 3333, host: "0.0.0.0" });
