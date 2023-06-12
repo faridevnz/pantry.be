@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// enums
+enum QuantityType {
+  MG // milligrams
+  PZ // pieces
+  ML // millilitres
+}
+
+enum RecipeDifficulty {
+  EASY
+  MEDIUM
+  DIFFICULT
+  EXTREME
+}
+
+// models
+model FoodCategory {
+  id   String @id @unique @default(uuid())
+  // fileds
+  name String @unique
+  // relations
+  Food Food[]
+}
+
+model Food {
+  id             String       @id @unique @default(uuid())
+  // fields
+  name           String
+  icon           String
+  expiration     String?
+  quantity_type  QuantityType
+  quantity_value Int
+  // TODO: add nutritional values
+  // relations
+  Recipes        Recipe[]
+  food_category  FoodCategory @relation(fields: [foodCategory], references: [id])
+  foodCategory   String
+}
+
+model Recipe {
+  id          String           @id @unique @default(uuid())
+  // fields
+  name        String
+  description String?
+  process     String?
+  difficulty  RecipeDifficulty
+  time        Int // in minutes
+  // relations
+  Foods       Food[]
+}

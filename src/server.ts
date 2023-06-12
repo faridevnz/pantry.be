@@ -2,6 +2,8 @@ import express from "express";
 import * as process from "process";
 import * as dotenv from "dotenv";
 import cors from "cors";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 dotenv.config();
 
@@ -12,7 +14,7 @@ export type Food = {
   category: string;
   quantity: {
     unit: string;
-    value: string;
+    value: number;
   };
 };
 
@@ -25,53 +27,31 @@ app.get("", (req, res) => {
 });
 
 // register routes
-app.get("/foods", (req, res) => {
-  res.send([
-    {
-      name: "Broccoli Congelati",
-      icon: "🥦",
-      category: "VERDURA",
-      expiration: "2023-06-12T15:39:12.726Z",
-      quantity: { unit: "gr", value: "120" },
-    },
-    {
-      name: "Avocado",
-      icon: "🥑",
-      category: "VERDURA",
-      expiration: "2023-06-13T15:39:12.726Z",
-      quantity: { unit: "gr", value: "60" },
-    },
-    {
-      name: "Bistecchine di Vitello",
-      icon: "🥩",
-      category: "CARNE",
-      expiration: "2023-06-14T15:39:12.726Z",
-      quantity: { unit: "gr", value: "230" },
-    },
-    {
-      name: "Sovraccosce di Pollo",
-      icon: "🍗",
-      category: "CARNE",
-      expiration: "2023-06-10T15:39:12.726Z",
-      quantity: { unit: "gr", value: "440" },
-    },
-    {
-      name: "Mele rosse Fuji",
-      icon: "🍎",
-      category: "FRUTTA",
-      expiration: "2023-06-11T15:39:12.726Z",
-      quantity: { unit: "pz", value: "3" },
-    },
-    {
-      name: "Pere",
-      icon: "🍐",
-      category: "FRUTTA",
-      expiration: "2023-06-20T15:39:12.726Z",
-      quantity: { unit: "pz", value: "1" },
-    },
-  ] satisfies Food[]);
+app.get("/foods", async (req, res) => {
+  // get foods from db
+  const foods = await prisma.food.findMany({
+    include: { food_category: true },
+  });
+  // map data
+  const mapped: Food[] = foods.map((food) => {
+    return {
+      name: food.name,
+      icon: food.icon,
+      category: food.food_category.name,
+      expiration: food.expiration,
+      quantity: {
+        unit: food.quantity_type,
+        value: food.quantity_value,
+      },
+    };
+  });
+  // return mapped foods
+  res.send(mapped);
 });
 
 // start the server
 const PORT = process.env.PORT || 3333;
-app.listen(PORT, () => console.log(`Sever is running port ${PORT} ...`));
+app.listen(PORT, async () => {
+  await prisma.$connect();
+  console.log(`Sever is running port ${PORT} ...`);
+});
