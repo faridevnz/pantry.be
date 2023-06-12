@@ -20,6 +20,10 @@ server.register(cors, {
   methods: ["PUT", "POST", "DELETE", "GET", "OPTIONS"],
 });
 
+server.get("", (request, reply) => {
+  reply.send("i'm up 🚀");
+});
+
 // register routes
 server.get("/foods", (request, reply) => {
   reply.send([
