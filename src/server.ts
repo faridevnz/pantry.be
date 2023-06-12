@@ -1,6 +1,9 @@
-import fastify from "fastify";
-import cors from "@fastify/cors";
+import express from "express";
 import * as process from "process";
+import * as dotenv from "dotenv";
+import cors from "cors";
+
+dotenv.config();
 
 export type Food = {
   name: string;
@@ -14,19 +17,16 @@ export type Food = {
 };
 
 // create the server instance
-const server = fastify({ logger: true });
-server.register(cors, {
-  allowedHeaders: "*",
-  methods: ["PUT", "POST", "DELETE", "GET", "OPTIONS"],
-});
+const app = express();
+app.use(cors());
 
-server.get("", (request, reply) => {
-  reply.send("i'm up 🚀");
+app.get("", (req, res) => {
+  res.send("i'm up 🚀");
 });
 
 // register routes
-server.get("/foods", (request, reply) => {
-  reply.send([
+app.get("/foods", (req, res) => {
+  res.send([
     {
       name: "Broccoli Congelati",
       icon: "🥦",
@@ -73,4 +73,5 @@ server.get("/foods", (request, reply) => {
 });
 
 // start the server
-server.listen({ port: Number(process.env.PORT ?? 3000), host: "0.0.0.0" });
+const PORT = process.env.PORT || 3333;
+app.listen(PORT, () => console.log(`Sever is running port ${PORT} ...`));
