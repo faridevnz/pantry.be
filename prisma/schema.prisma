@@ -18,10 +18,9 @@ enum QuantityType {
 }
 
 enum RecipeDifficulty {
-  EASY
-  MEDIUM
-  DIFFICULT
-  EXTREME
+  FACILE
+  DIFFICILE
+  MEDIO
 }
 
 // models
@@ -34,7 +33,7 @@ model FoodCategory {
 }
 
 model Food {
-  id             String       @id @unique @default(uuid())
+  id             String        @id @unique @default(uuid())
   // fields
   name           String
   icon           String
@@ -42,10 +41,13 @@ model Food {
   quantity_type  QuantityType
   quantity_value Int
   // TODO: add nutritional values
+  carbohydrate   Int // gr
+  protein        Int // gr
+  fat            Int // gr
   // relations
-  Recipes        Recipe[]
-  food_category  FoodCategory @relation(fields: [foodCategory], references: [id])
+  food_category  FoodCategory  @relation(fields: [foodCategory], references: [id])
   foodCategory   String
+  Recipe_Food    Recipe_Food[]
 }
 
 model Recipe {
@@ -57,5 +59,17 @@ model Recipe {
   difficulty  RecipeDifficulty
   time        Int // in minutes
   // relations
-  Foods       Food[]
+  Recipe_Food Recipe_Food[]
+}
+
+// n to n ( Recipe_Food )
+model Recipe_Food {
+  id       String @id @unique @default(uuid())
+  // fields
+  quantity Int // gr
+  // relations
+  food     Food   @relation(fields: [foodId], references: [id])
+  foodId   String
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId String
 }
