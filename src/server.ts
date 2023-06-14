@@ -13,6 +13,7 @@ const prisma = new PrismaClient();
 dotenv.config();
 
 export type Food = {
+  id: string;
   name: string;
   icon: string;
   expiration: string;
@@ -25,7 +26,7 @@ export type Food = {
 export type Recipe = {
   name: string;
   description: string;
-  difficulty: "FACILE" | "DIFFICILE" | "MEDIO";
+  difficulty: "F" | "D" | "M";
   category: string;
   time: number;
   nutritional_values: {
@@ -62,6 +63,7 @@ app.get("/foods", async (req, res) => {
   // map data
   const mapped: Food[] = foods.map((food) => {
     return {
+      id: food.id,
       name: food.name,
       icon: food.icon,
       category: food.food_category.name,
@@ -125,7 +127,10 @@ app.post("/foods", async (req, res) => {
 app.get("/recipes", async (req, res) => {
   // get recipes from db
   const recipes = await prisma.recipe.findMany({
-    include: { Recipe_Food: { include: { food: true, recipe: true } } },
+    include: {
+      Recipe_Food: { include: { food: true, recipe: true } },
+      RecipeCategory: true,
+    },
   });
   // map data
   const mapped: Recipe[] = recipes.map((recipe) => {
@@ -150,22 +155,70 @@ app.get("/recipes", async (req, res) => {
       name: recipe.name,
       time: recipe.time,
       nutritional_values: {
-        calories: carbo + protein + fat,
-        carbohydrates: Math.abs(carbo / 4),
-        fats: Math.abs(fat / 9),
-        proteins: Math.abs(protein / 4),
+        calories: Math.floor(carbo + protein + fat),
+        carbohydrates: Math.floor(carbo / 4),
+        fats: Math.floor(fat / 9),
+        proteins: Math.floor(protein / 4),
       },
       food: {
         all: { count: 0 },
         missing: { count: 0 },
       },
-      category: "",
+      category: recipe.RecipeCategory.name,
       description: recipe.description,
       difficulty: recipe.difficulty,
     };
   });
   // return data
   res.send(mapped);
+});
+
+type IngredientDTO = {
+  food_id: string;
+  quantity: string;
+};
+type CreateRecipeDTO = {
+  name: string;
+  description: string;
+  category: string;
+  difficulty: "F" | "M" | "D";
+  time: string;
+  ingredients: IngredientDTO[];
+};
+app.post("/recipes", async (req, res) => {
+  const body: CreateRecipeDTO = req.body;
+  const created = await prisma.recipe.create({
+    data: {
+      name: body.name,
+      description: body.description,
+      process: null,
+      difficulty: body.difficulty,
+      time: Number(body.time),
+      Recipe_Food: {
+        createMany: {
+          data: body.ingredients.map((ingredient) => ({
+            foodId: ingredient.food_id,
+            quantity: Number(ingredient.quantity),
+          })),
+        },
+      },
+      RecipeCategory: {
+        connectOrCreate: {
+          where: {
+            name: body.category,
+          },
+          create: {
+            name: body.category,
+          },
+        },
+      },
+    },
+    include: {
+      Recipe_Food: true,
+    },
+  });
+  // return
+  res.send({ ...created });
 });
 
 // start the server
