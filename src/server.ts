@@ -24,6 +24,7 @@ export type Food = {
   };
 };
 export type Recipe = {
+  id: string;
   name: string;
   description: string;
   difficulty: "F" | "D" | "M";
@@ -161,6 +162,7 @@ app.get("/recipes", async (req, res) => {
       );
     }, 0);
     return {
+      id: recipe.id,
       name: recipe.name,
       time: recipe.time,
       nutritional_values: {
@@ -180,6 +182,25 @@ app.get("/recipes", async (req, res) => {
   });
   // return data
   res.send(mapped);
+});
+
+app.delete("/recipes/:id", async (req, res) => {
+  // take the id to delete
+  const id = req.params.id;
+  // delete all recipe-food association
+  await prisma.recipe_Food.deleteMany({
+    where: {
+      recipeId: id,
+    },
+  });
+  // delete recipe from db
+  const deleted = await prisma.recipe.delete({
+    where: {
+      id,
+    },
+  });
+  // return deleted recipe
+  res.send({ ...deleted });
 });
 
 type IngredientDTO = {

@@ -82,4 +82,6 @@ model Recipe_Food {
   foodId   String
   recipe   Recipe @relation(fields: [recipeId], references: [id])
   recipeId String
+
+  @@unique([foodId, recipeId])
 }
