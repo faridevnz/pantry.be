@@ -78,6 +78,15 @@ app.get("/foods", async (req, res) => {
   res.send(mapped);
 });
 
+app.delete("/foods/:id", async (req, res) => {
+  const id = req.params["id"];
+  // delete food
+  const deleted = await prisma.food.delete({ where: { id } });
+  console.log(deleted);
+  // return
+  res.send({ ...deleted });
+});
+
 type CreateFoodDTO = {
   name: string;
   category: string;
