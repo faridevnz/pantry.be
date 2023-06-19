@@ -47,11 +47,11 @@ model Food {
   icon           String
   expiration     String?
   quantity_type  QuantityType
-  quantity_value Int
+  quantity_value Float
   // TODO: add nutritional values
-  carbohydrate   Int // gr
-  protein        Int // gr
-  fat            Int // gr
+  carbohydrate   Float // g
+  protein        Float // g
+  fat            Float // g
   // relations
   food_category  FoodCategory  @relation(fields: [foodCategory], references: [id])
   foodCategory   String

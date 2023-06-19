@@ -106,6 +106,7 @@ const mapQuantityType = (
 };
 app.post("/foods", async (req, res) => {
   const body: CreateFoodDTO = req.body;
+  console.log("[ (POST) - FOODS ]: body", body);
   const created = await prisma.food.create({
     data: {
       name: body.name,
@@ -115,9 +116,9 @@ app.post("/foods", async (req, res) => {
         body.quantity.unit === "GR"
           ? Number(body.quantity.value) * 1000
           : Number(body.quantity.value),
-      carbohydrate: Number(body.carbohydrates),
-      protein: Number(body.proteins),
-      fat: Number(body.fats),
+      carbohydrate: Number(body.carbohydrates), // mg
+      protein: Number(body.proteins), // mg
+      fat: Number(body.fats), // mg
       expiration: body.expiration,
       food_category: {
         connectOrCreate: {
@@ -145,22 +146,28 @@ app.get("/recipes", async (req, res) => {
   // map data
   const mapped: Recipe[] = recipes.map((recipe) => {
     // compute macros
-    const carbo = recipe.Recipe_Food.reduce((acc, food_in_recipe) => {
-      return (
-        (food_in_recipe.food.carbohydrate / 100) * food_in_recipe.quantity * 4 +
-        acc
-      );
-    }, 0);
-    const protein = recipe.Recipe_Food.reduce((acc, food_in_recipe) => {
-      return (
-        (food_in_recipe.food.protein / 100) * food_in_recipe.quantity * 4 + acc
-      );
-    }, 0);
-    const fat = recipe.Recipe_Food.reduce((acc, food_in_recipe) => {
-      return (
-        (food_in_recipe.food.fat / 100) * food_in_recipe.quantity * 4 + acc
-      );
-    }, 0);
+    const carbo =
+      recipe.Recipe_Food.reduce((acc, food_in_recipe) => {
+        return (
+          (food_in_recipe.food.carbohydrate / 100) *
+            food_in_recipe.quantity *
+            4 +
+          acc
+        );
+      }, 0) / 1000;
+    const protein =
+      recipe.Recipe_Food.reduce((acc, food_in_recipe) => {
+        return (
+          (food_in_recipe.food.protein / 100) * food_in_recipe.quantity * 4 +
+          acc
+        );
+      }, 0) / 1000;
+    const fat =
+      recipe.Recipe_Food.reduce((acc, food_in_recipe) => {
+        return (
+          (food_in_recipe.food.fat / 100) * food_in_recipe.quantity * 4 + acc
+        );
+      }, 0) / 1000;
     return {
       id: recipe.id,
       name: recipe.name,
@@ -172,8 +179,8 @@ app.get("/recipes", async (req, res) => {
         proteins: Math.floor(protein / 4),
       },
       food: {
-        all: { count: 0 },
-        missing: { count: 0 },
+        all: { count: 0 }, // TODO: calculate this
+        missing: { count: 0 }, // TODO: calculate this
       },
       category: recipe.RecipeCategory.name,
       description: recipe.description,
